@@ -30,6 +30,27 @@ resource "azurerm_subnet" "aks_subnet" {
   address_prefixes     = [var.subnet_cidr]
 }
 
+# Route table for network policies
+resource "azurerm_route_table" "aks_route_table" {
+  name                = "aks-route-table"
+  location            = azurerm_resource_group.aks.location
+  resource_group_name = azurerm_resource_group.aks.name
+
+  # Empty route table - used for network policies and future routing rules
+  # With loadBalancer outbound type, Azure manages the outbound connectivity
+
+  tags = {
+    Environment = "aks-cluster"
+    Purpose     = "kubernetes"
+  }
+}
+
+# Associate route table with subnet
+resource "azurerm_subnet_route_table_association" "aks_route_association" {
+  subnet_id      = azurerm_subnet.aks_subnet.id
+  route_table_id = azurerm_route_table.aks_route_table.id
+}
+
 # Network Security Group for AKS subnet
 resource "azurerm_network_security_group" "aks_nsg" {
   name                = "aks-nsg"
@@ -49,13 +70,6 @@ resource "azurerm_network_security_group" "aks_nsg" {
     destination_address_prefix = "*"
   }
 
-  # NOTE: HTTP/HTTPS inbound rules removed for security
-  # For ingress traffic, use Kubernetes ingress controllers with:
-  # - Azure Load Balancer (automatically created by AKS for LoadBalancer services)
-  # - Azure Application Gateway Ingress Controller (AGIC)
-  # This follows Azure best practices for AKS networking and avoids
-  # exposing node subnet directly to internet traffic
-
   tags = {
     Environment = "aks-cluster"
     Purpose     = "kubernetes"
@@ -68,7 +82,7 @@ resource "azurerm_subnet_network_security_group_association" "aks_nsg_associatio
   network_security_group_id = azurerm_network_security_group.aks_nsg.id
 }
 
-# NAT Gateway for outbound internet connectivity from private nodes
+# NAT Gateway for outbound internet connectivity
 resource "azurerm_public_ip" "nat_gateway_ip" {
   name                = "nat-gateway-ip"
   location            = azurerm_resource_group.aks.location

@@ -54,12 +54,6 @@ variable "kubernetes_version" {
   default     = "1.33.3" # Updated to latest GA version without LTS requirement
 }
 
-variable "aks_master_cidr" {
-  type        = string
-  description = "Private IP subnet for AKS control plane (when using private endpoint)"
-  default     = "172.16.0.0/28"
-}
-
 variable "vnet_cidr" {
   type        = string
   description = "CIDR block for the VNet"
