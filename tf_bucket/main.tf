@@ -46,8 +46,8 @@ resource "random_string" "suffix" {
 }
 
 # Storage Account for Terraform state
-resource "azurerm_storage_account" "tfstate" {
-  name                     = "sttfstate${random_string.suffix.result}"
+# Azure storage account names must be 3-24 characters. The prefix is kept short to allow for an 8-character random suffix.
+  name                     = "sttfs${random_string.suffix.result}"
   resource_group_name      = azurerm_resource_group.tfstate.name
   location                 = azurerm_resource_group.tfstate.location
   account_tier             = "Standard"
