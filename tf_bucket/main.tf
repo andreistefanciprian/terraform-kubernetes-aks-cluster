@@ -82,11 +82,9 @@ output "resource_group_name" {
   value       = azurerm_resource_group.tfstate.name
 }
 
-output "storage_account_key" {
-  description = "Primary access key for the storage account"
-  value       = azurerm_storage_account.tfstate.primary_access_key
-  sensitive   = true
-}
+# The storage account access key is not exposed as an output for security reasons.
+# If you need to retrieve the key, use the Azure CLI:
+# az storage account keys list --resource-group <resource_group> --account-name <storage_account>
 
 output "container_name" {
   description = "Name of the main tfstate container"
