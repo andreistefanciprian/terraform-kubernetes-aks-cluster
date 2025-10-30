@@ -28,7 +28,7 @@ docker compose run --rm terraform -chdir=tf_bucket apply -auto-approve
 
 4. **Deploy AKS cluster**:
 ```bash
-# Note: Once you have created the Azure storage conainer, update the container name variable (TFSTATE_CONTAINER) in the Makefile.
+# Note: Once you have created the Azure storage container, update the container name variable (TFSTATE_CONTAINER) in the Makefile.
 make plan TF_TARGET=aks_cluster
 make deploy-auto-approve TF_TARGET=aks_cluster
 ```
