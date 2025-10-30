@@ -27,14 +27,14 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # private_dns_zone_id not needed for public clusters
   # private_cluster_public_fqdn_enabled not needed for public clusters
 
-  # Network configuration with custom VNet and NAT Gateway
+  # Network configuration with custom VNet
   network_profile {
     network_plugin    = "azure"
     network_policy    = "azure"
     dns_service_ip    = "10.2.0.10"
     service_cidr      = "10.2.0.0/24"
     load_balancer_sku = "standard"
-    # Use loadBalancer with our custom NAT Gateway for outbound connectivity
+    # Use loadBalancer for Azure-managed outbound connectivity
     outbound_type = "loadBalancer"
   }
 
@@ -111,7 +111,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   depends_on = [
-    azurerm_subnet_nat_gateway_association.aks_subnet_nat,
     azurerm_subnet_route_table_association.aks_route_association,
     azurerm_subnet_network_security_group_association.aks_nsg_association
   ]
