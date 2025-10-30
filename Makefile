@@ -22,13 +22,13 @@ get:
 	$(TF_EXEC) -chdir=$(TF_TARGET) fmt
 
 init: clean get clean-orphan-containers
-	$(TF_EXEC) -chdir=$(TF_TARGET) init -backend-config 'bucket=$(TFSTATE_CONTAINER)' -backend-config 'prefix=$(TFSTATE_DIR)' -input=false
+	$(TF_EXEC) -chdir=$(TF_TARGET) init -backend-config 'container_name=$(TFSTATE_CONTAINER)' -backend-config 'key=$(TFSTATE_DIR)' -input=false
 
 plan: init
 	$(TF_EXEC) -chdir=$(TF_TARGET) plan -input=false -out=$(TF_PLAN_FILE)
 
 deploy: plan
-	$(TF_EXEC) apply $(TF_PLAN_FILE) && rm $(TF_PLAN_FILE)
+	$(TF_EXEC) -chdir=$(TF_TARGET) apply $(TF_PLAN_FILE) && rm $(TF_PLAN_FILE)
 
 deploy-auto-approve: init
 	$(TF_EXEC) -chdir=$(TF_TARGET) apply -input=false -auto-approve
