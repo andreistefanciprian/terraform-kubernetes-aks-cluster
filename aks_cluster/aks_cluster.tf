@@ -34,8 +34,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
     dns_service_ip    = "10.2.0.10"
     service_cidr      = "10.2.0.0/24"
     load_balancer_sku = "standard"
-    # Use loadBalancer for simpler setup and better service mesh compatibility
-    outbound_type = "loadBalancer"
+    # Use userDefinedRouting with NAT Gateway for outbound connectivity
+    outbound_type = "userDefinedRouting"
   }
 
   # Default node pool configuration
