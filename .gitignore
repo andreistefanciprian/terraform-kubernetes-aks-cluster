@@ -45,6 +45,10 @@ terraform.rc
 */terraform.tfstate.backup
 */*.tfstate
 */*.tfplan
+
+# Environment files
 .env
-.*
+!.env.example
+
+# Git files
 !/.gitignore
