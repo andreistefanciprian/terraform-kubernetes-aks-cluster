@@ -49,31 +49,12 @@ resource "azurerm_network_security_group" "aks_nsg" {
     destination_address_prefix = "*"
   }
 
-  # Allow HTTP
-  security_rule {
-    name                       = "HTTP"
-    priority                   = 1002
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "80"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  # Allow HTTPS
-  security_rule {
-    name                       = "HTTPS"
-    priority                   = 1003
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "443"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
+  # NOTE: HTTP/HTTPS inbound rules removed for security
+  # For ingress traffic, use Kubernetes ingress controllers with:
+  # - Azure Load Balancer (automatically created by AKS for LoadBalancer services)
+  # - Azure Application Gateway Ingress Controller (AGIC)
+  # This follows Azure best practices for AKS networking and avoids
+  # exposing node subnet directly to internet traffic
 
   tags = {
     Environment = "aks-cluster"
