@@ -1,6 +1,6 @@
 # AKS Cluster with Terraform
 
-Terraform code to deploy an Azure Kubernetes Service (AKS) cluster with public API endpoint and private nodes (similar to GKE setup).
+Terraform code to deploy an Azure Kubernetes Service (AKS) cluster with public API endpoint and private nodes (similar to [GKE setup](https://github.com/andreistefanciprian/terraform-kubernetes-gke-cluster)).
 
 ## Prerequisites
 - Azure CLI
