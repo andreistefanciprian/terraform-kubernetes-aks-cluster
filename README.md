@@ -13,6 +13,9 @@ Terraform code to deploy an Azure Kubernetes Service (AKS) cluster with public A
 ```bash
 az login
 
+# Verify
+az account show --output table
+
 # Register required Azure resource providers
 az provider register --namespace Microsoft.Storage
 az provider register --namespace Microsoft.ContainerService
@@ -28,6 +31,8 @@ az provider show --namespace Microsoft.ContainerService --query "registrationSta
 
 2. **Configure authentication** - Update `.env` with your Azure service principal credentials:
 ```bash
+az ad sp create-for-rbac --name "terraform" --role="Contributor" --scopes="/subscriptions/<SUBSCRITION_ID>"
+
 cp .env.example .env
 # Edit .env with your ARM_* values
 ```
