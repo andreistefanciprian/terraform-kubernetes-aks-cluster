@@ -1,3 +1,17 @@
+# Log Analytics Workspace for Container Insights
+resource "azurerm_log_analytics_workspace" "aks" {
+  name                = "aks-cluster-logs"
+  location            = azurerm_resource_group.aks.location
+  resource_group_name = azurerm_resource_group.aks.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+
+  tags = {
+    Environment = "aks-cluster"
+    Purpose     = "monitoring"
+  }
+}
+
 # User Assigned Managed Identity for AKS cluster
 resource "azurerm_user_assigned_identity" "aks_identity" {
   name                = var.service_account_name_cluster
@@ -93,6 +107,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   # Azure Monitor and logging
   monitor_metrics {}
+
+  # Collect pod logs and Kubernetes events into Azure Monitor Logs
+  oms_agent {
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.aks.id
+  }
 
   # Add-ons
   key_vault_secrets_provider {
