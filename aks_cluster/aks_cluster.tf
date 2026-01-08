@@ -118,10 +118,42 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # HTTP application routing (not recommended for production)
   http_application_routing_enabled = false
 
+  # Application Gateway Ingress Controller add-on
+  ingress_application_gateway {
+    gateway_id = azurerm_application_gateway.appgw.id
+  }
+
   tags = var.tags
 
   depends_on = [
     azurerm_subnet_route_table_association.aks_route_association,
-    azurerm_subnet_network_security_group_association.aks_nsg_association
+    azurerm_subnet_network_security_group_association.aks_nsg_association,
+    azurerm_application_gateway.appgw
   ]
+}
+
+# Get the AGIC managed identity created by AKS
+data "azurerm_user_assigned_identity" "agic_identity" {
+  name                = azurerm_kubernetes_cluster.aks.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+  resource_group_name = azurerm_kubernetes_cluster.aks.node_resource_group
+
+  depends_on = [azurerm_kubernetes_cluster.aks]
+}
+
+# Grant AGIC Contributor access to Application Gateway
+resource "azurerm_role_assignment" "agic_appgw_contributor" {
+  scope                = azurerm_application_gateway.appgw.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_kubernetes_cluster.aks.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+
+  depends_on = [azurerm_kubernetes_cluster.aks]
+}
+
+# Grant AGIC Reader access to Resource Group (to discover resources)
+resource "azurerm_role_assignment" "agic_resource_group_reader" {
+  scope                = azurerm_resource_group.aks.id
+  role_definition_name = "Reader"
+  principal_id         = azurerm_kubernetes_cluster.aks.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+
+  depends_on = [azurerm_kubernetes_cluster.aks]
 }

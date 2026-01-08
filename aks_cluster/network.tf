@@ -69,3 +69,92 @@ resource "azurerm_subnet_network_security_group_association" "aks_nsg_associatio
   subnet_id                 = azurerm_subnet.aks_subnet.id
   network_security_group_id = azurerm_network_security_group.aks_nsg.id
 }
+
+# Subnet for Application Gateway
+resource "azurerm_subnet" "appgw_subnet" {
+  name                 = "appgw-subnet"
+  resource_group_name  = azurerm_resource_group.aks.name
+  virtual_network_name = azurerm_virtual_network.aks_vnet.name
+  address_prefixes     = [var.appgw_subnet_cidr]
+}
+
+# Public IP for Application Gateway
+resource "azurerm_public_ip" "appgw_pip" {
+  name                = "appgw-pip"
+  location            = azurerm_resource_group.aks.location
+  resource_group_name = azurerm_resource_group.aks.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  tags = var.tags
+}
+
+# Application Gateway
+resource "azurerm_application_gateway" "appgw" {
+  name                = "aks-appgw"
+  location            = azurerm_resource_group.aks.location
+  resource_group_name = azurerm_resource_group.aks.name
+
+  sku {
+    name     = var.appgw_sku
+    tier     = var.appgw_sku
+    capacity = var.appgw_capacity
+  }
+
+  gateway_ip_configuration {
+    name      = "appgw-ip-config"
+    subnet_id = azurerm_subnet.appgw_subnet.id
+  }
+
+  frontend_port {
+    name = "http-port"
+    port = 80
+  }
+
+  frontend_port {
+    name = "https-port"
+    port = 443
+  }
+
+  frontend_ip_configuration {
+    name                 = "appgw-frontend-ip"
+    public_ip_address_id = azurerm_public_ip.appgw_pip.id
+  }
+
+  frontend_ip_configuration {
+    name                          = "appgw-frontend-private-ip"
+    subnet_id                     = azurerm_subnet.appgw_subnet.id
+    private_ip_address            = var.appgw_private_ip
+    private_ip_address_allocation = "Static"
+  }
+
+  backend_address_pool {
+    name = "default-backend-pool"
+  }
+
+  backend_http_settings {
+    name                  = "default-http-settings"
+    cookie_based_affinity = "Disabled"
+    port                  = 80
+    protocol              = "Http"
+    request_timeout       = 30
+  }
+
+  http_listener {
+    name                           = "default-listener"
+    frontend_ip_configuration_name = "appgw-frontend-ip"
+    frontend_port_name             = "http-port"
+    protocol                       = "Http"
+  }
+
+  request_routing_rule {
+    name                       = "default-routing-rule"
+    rule_type                  = "Basic"
+    http_listener_name         = "default-listener"
+    backend_address_pool_name  = "default-backend-pool"
+    backend_http_settings_name = "default-http-settings"
+    priority                   = 100
+  }
+
+  tags = var.tags
+}

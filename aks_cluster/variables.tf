@@ -66,6 +66,30 @@ variable "subnet_cidr" {
   default     = "10.10.1.0/24"
 }
 
+variable "appgw_subnet_cidr" {
+  type        = string
+  description = "CIDR block for the Application Gateway subnet"
+  default     = "10.10.2.0/24"
+}
+
+variable "appgw_sku" {
+  type        = string
+  description = "SKU for Application Gateway"
+  default     = "Standard_v2"
+}
+
+variable "appgw_capacity" {
+  type        = number
+  description = "Capacity (instance count) for Application Gateway"
+  default     = 2
+}
+
+variable "appgw_private_ip" {
+  type        = string
+  description = "Private IP address for Application Gateway frontend"
+  default     = "10.10.2.10"
+}
+
 variable "tags" {
   type        = map(string)
   description = "Common tags to apply to all resources"
