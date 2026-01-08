@@ -10,7 +10,7 @@ TFSTATE_DIR=tfstate/$(TF_TARGET)
 all: plan
 
 clean-orphan-containers:
-	@docker rm -f $$(docker ps -aq --filter "name=terraform-kubernetes-aks-cluster-terraform-run") 2>/dev/null || echo "No matching containers to remove."
+	@docker rm -f $$(docker ps -aq --filter "name=terraform-kubernetes-*") 2>/dev/null || echo "No matching containers to remove."
 
 clean:
 	@rm -rf $(TF_TARGET)/.terraform

@@ -3,10 +3,7 @@ resource "azurerm_resource_group" "aks" {
   name     = "${var.resource_group_prefix}-${random_string.suffix.result}"
   location = var.azure_region
 
-  tags = {
-    Environment = "aks-cluster"
-    Purpose     = "kubernetes"
-  }
+  tags = var.tags
 }
 
 # Virtual Network
@@ -16,10 +13,7 @@ resource "azurerm_virtual_network" "aks_vnet" {
   location            = azurerm_resource_group.aks.location
   resource_group_name = azurerm_resource_group.aks.name
 
-  tags = {
-    Environment = "aks-cluster"
-    Purpose     = "kubernetes"
-  }
+  tags = var.tags
 }
 
 # Subnet for AKS nodes
@@ -39,10 +33,7 @@ resource "azurerm_route_table" "aks_route_table" {
   # Empty route table - used for network policies and future routing rules
   # With loadBalancer outbound type, Azure manages the outbound connectivity
 
-  tags = {
-    Environment = "aks-cluster"
-    Purpose     = "kubernetes"
-  }
+  tags = var.tags
 }
 
 # Associate route table with subnet
@@ -70,10 +61,7 @@ resource "azurerm_network_security_group" "aks_nsg" {
     destination_address_prefix = "*"
   }
 
-  tags = {
-    Environment = "aks-cluster"
-    Purpose     = "kubernetes"
-  }
+  tags = var.tags
 }
 
 # Associate NSG with subnet
