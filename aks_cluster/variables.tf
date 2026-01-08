@@ -90,6 +90,18 @@ variable "appgw_private_ip" {
   default     = "10.10.2.10"
 }
 
+variable "enable_key_vault" {
+  type        = bool
+  description = "Enable Key Vault for certificate management"
+  default     = true
+}
+
+variable "key_vault_sku" {
+  type        = string
+  description = "SKU for Key Vault"
+  default     = "standard"
+}
+
 variable "tags" {
   type        = map(string)
   description = "Common tags to apply to all resources"
