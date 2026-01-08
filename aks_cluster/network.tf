@@ -70,6 +70,90 @@ resource "azurerm_subnet_network_security_group_association" "aks_nsg_associatio
   network_security_group_id = azurerm_network_security_group.aks_nsg.id
 }
 
+# Managed Identity for Application Gateway (for Key Vault access)
+resource "azurerm_user_assigned_identity" "appgw_identity" {
+  name                = "appgw-identity"
+  resource_group_name = azurerm_resource_group.aks.name
+  location            = azurerm_resource_group.aks.location
+
+  tags = var.tags
+}
+
+# Key Vault for SSL certificates
+resource "azurerm_key_vault" "certs" {
+  count = var.enable_key_vault ? 1 : 0
+
+  name                       = "aks-certs-${random_string.suffix.result}"
+  location                   = azurerm_resource_group.aks.location
+  resource_group_name        = azurerm_resource_group.aks.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = var.key_vault_sku
+  soft_delete_retention_days = 7
+  purge_protection_enabled   = false
+
+  # Network access - allow Azure services
+  network_acls {
+    default_action = "Allow"
+    bypass         = "AzureServices"
+  }
+
+  tags = var.tags
+}
+
+# Grant Application Gateway managed identity access to Key Vault secrets
+resource "azurerm_key_vault_access_policy" "appgw_certs" {
+  count = var.enable_key_vault ? 1 : 0
+
+  key_vault_id = azurerm_key_vault.certs[0].id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_user_assigned_identity.appgw_identity.principal_id
+
+  secret_permissions = [
+    "Get",
+    "List"
+  ]
+
+  certificate_permissions = [
+    "Get",
+    "List"
+  ]
+}
+
+# Grant current user/service principal access to manage certificates
+resource "azurerm_key_vault_access_policy" "current_user" {
+  count = var.enable_key_vault ? 1 : 0
+
+  key_vault_id = azurerm_key_vault.certs[0].id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
+
+  secret_permissions = [
+    "Get",
+    "List",
+    "Set",
+    "Delete",
+    "Purge",
+    "Recover"
+  ]
+
+  certificate_permissions = [
+    "Get",
+    "List",
+    "Create",
+    "Import",
+    "Delete",
+    "Purge",
+    "Recover",
+    "Update",
+    "ManageContacts",
+    "ManageIssuers",
+    "GetIssuers",
+    "ListIssuers",
+    "SetIssuers",
+    "DeleteIssuers"
+  ]
+}
+
 # Subnet for Application Gateway
 resource "azurerm_subnet" "appgw_subnet" {
   name                 = "appgw-subnet"
@@ -99,6 +183,12 @@ resource "azurerm_application_gateway" "appgw" {
     name     = var.appgw_sku
     tier     = var.appgw_sku
     capacity = var.appgw_capacity
+  }
+
+  # Enable managed identity for Key Vault access
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.appgw_identity.id]
   }
 
   gateway_ip_configuration {
@@ -157,4 +247,8 @@ resource "azurerm_application_gateway" "appgw" {
   }
 
   tags = var.tags
+
+  depends_on = [
+    azurerm_key_vault_access_policy.appgw_certs
+  ]
 }

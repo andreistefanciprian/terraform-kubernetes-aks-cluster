@@ -4,3 +4,6 @@ resource "random_string" "suffix" {
   special = false
   upper   = false
 }
+
+# Get current Azure client configuration
+data "azurerm_client_config" "current" {}
