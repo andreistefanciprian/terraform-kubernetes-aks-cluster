@@ -65,3 +65,14 @@ variable "subnet_cidr" {
   description = "CIDR block for the AKS subnet"
   default     = "10.10.1.0/24"
 }
+
+variable "tags" {
+  type        = map(string)
+  description = "Common tags to apply to all resources"
+  default = {
+    Environment = "dev"
+    ManagedBy   = "Terraform"
+    Project     = "AKS-Cluster"
+    Owner       = "DevOps-Team"
+  }
+}

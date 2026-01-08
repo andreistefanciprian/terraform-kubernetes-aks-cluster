@@ -6,10 +6,7 @@ resource "azurerm_log_analytics_workspace" "aks" {
   sku                 = "PerGB2018"
   retention_in_days   = 30
 
-  tags = {
-    Environment = "aks-cluster"
-    Purpose     = "monitoring"
-  }
+  tags = var.tags
 }
 
 # User Assigned Managed Identity for AKS cluster
@@ -18,10 +15,7 @@ resource "azurerm_user_assigned_identity" "aks_identity" {
   resource_group_name = azurerm_resource_group.aks.name
   location            = azurerm_resource_group.aks.location
 
-  tags = {
-    Environment = "aks-cluster"
-    Purpose     = "kubernetes"
-  }
+  tags = var.tags
 }
 
 # Note: Role assignment removed due to insufficient permissions
@@ -124,10 +118,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # HTTP application routing (not recommended for production)
   http_application_routing_enabled = false
 
-  tags = {
-    Environment = "aks-cluster"
-    Purpose     = "kubernetes"
-  }
+  tags = var.tags
 
   depends_on = [
     azurerm_subnet_route_table_association.aks_route_association,
