@@ -18,9 +18,6 @@ resource "azurerm_user_assigned_identity" "aks_identity" {
   tags = var.tags
 }
 
-# Note: Role assignment removed due to insufficient permissions
-# The AKS service will automatically create necessary role assignments
-
 # AKS Cluster
 resource "azurerm_kubernetes_cluster" "aks" {
   name                = "aks-cluster"
@@ -131,6 +128,3 @@ resource "azurerm_kubernetes_cluster" "aks" {
     azurerm_application_gateway.appgw
   ]
 }
-
-# Note: Azure automatically grants the AGIC managed identity the necessary permissions
-# when using the ingress_application_gateway add-on. No manual role assignments needed.
