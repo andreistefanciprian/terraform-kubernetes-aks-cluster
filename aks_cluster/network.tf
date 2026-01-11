@@ -179,10 +179,10 @@ resource "azurerm_public_ip" "appgw_pip" {
 locals {
   # Determine if HTTPS is enabled
   appgw_https_enabled = var.enable_key_vault && var.appgw_ssl_certificate_name != ""
-  
+
   # Determine if HTTP to HTTPS redirect is enabled
   appgw_redirect_enabled = local.appgw_https_enabled && var.appgw_enable_http_redirect
-  
+
   # Determine if HTTP routing should be enabled (when HTTPS is not configured or redirect is disabled)
   appgw_http_routing_enabled = !local.appgw_redirect_enabled
 }
@@ -345,7 +345,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   tags = var.tags
 
-  depends_on = var.enable_key_vault ? [
+  depends_on = [
     azurerm_key_vault_access_policy.appgw_certs
-  ] : []
+  ]
 }
