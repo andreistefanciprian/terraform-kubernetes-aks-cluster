@@ -1,0 +1,42 @@
+# Example Terraform variables configuration
+# Copy this file to terraform.tfvars and customize the values
+
+# Azure region for the AKS cluster
+# azure_region = "eastus"
+
+# Resource group name prefix
+# resource_group_prefix = "aks-cluster-rg"
+
+# Network configuration
+# vnet_cidr = "10.10.0.0/16"
+# subnet_cidr = "10.10.1.0/24"
+# appgw_subnet_cidr = "10.10.2.0/24"
+# appgw_private_ip = "10.10.2.10"
+
+# AKS cluster configuration
+# kubernetes_version = "1.28"
+# node_count = 3
+# vm_size = "Standard_D2s_v3"
+
+# Application Gateway configuration
+# appgw_sku = "Standard_v2"
+# appgw_capacity = 2
+
+# HTTPS/TLS Configuration
+# Enable Key Vault for certificate management (required for HTTPS)
+# enable_key_vault = true
+
+# SSL certificate name in Key Vault (leave empty for HTTP-only mode)
+# After uploading your certificate to Key Vault, set this to the certificate name
+# appgw_ssl_certificate_name = "my-app-cert"
+
+# Enable automatic HTTP to HTTPS redirect (recommended for production)
+# appgw_enable_http_redirect = true
+
+# Tags for all resources
+# tags = {
+#   Environment = "production"
+#   ManagedBy   = "Terraform"
+#   Project     = "AKS-Cluster"
+#   Owner       = "DevOps-Team"
+# }
