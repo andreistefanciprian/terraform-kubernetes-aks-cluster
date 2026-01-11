@@ -120,6 +120,12 @@ variable "appgw_enable_http_redirect" {
   default     = true
 }
 
+variable "certificate_version" {
+  type        = string
+  description = "Specific version of the certificate in Key Vault. Leave empty to use latest version."
+  default     = ""
+}
+
 variable "tags" {
   type        = map(string)
   description = "Common tags to apply to all resources"
