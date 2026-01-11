@@ -68,9 +68,33 @@ The AKS cluster includes an Application Gateway Ingress Controller (AGIC) with s
 
 By default, the Application Gateway is configured with HTTP support. To enable HTTPS/TLS:
 
-1. **Upload SSL certificate to Key Vault**:
+1. **Generate or upload SSL certificate to Key Vault**:
+
+   **Option A: Generate a self-signed certificate (for testing)**
    ```bash
-   # Get the Key Vault name (it will be aks-certs-<random-suffix>)
+   # Get the Key Vault name (it will be aks-kv-<random-suffix>)
+   az keyvault list --resource-group <your-rg-name> --output table
+   
+   # Create a self-signed certificate in Key Vault
+   az keyvault certificate create \
+     --vault-name <key-vault-name> \
+     --name my-app-cert \
+     --policy "$(az keyvault certificate get-default-policy)"
+   
+   # Or create with custom subject
+   az keyvault certificate create \
+     --vault-name <key-vault-name> \
+     --name my-app-cert \
+     --policy '{
+       "issuerParameters": {"name": "Self"},
+       "keyProperties": {"exportable": true, "keyType": "RSA", "keySize": 2048, "reuseKey": false},
+       "x509CertificateProperties": {"subject": "CN=example.com"}
+     }'
+   ```
+
+   **Option B: Import an existing certificate (for production)**
+   ```bash
+   # Get the Key Vault name (it will be aks-kv-<random-suffix>)
    az keyvault list --resource-group <your-rg-name> --output table
    
    # Import your certificate (PFX format with private key)
