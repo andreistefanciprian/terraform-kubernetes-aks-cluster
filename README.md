@@ -31,7 +31,11 @@ az provider show --namespace Microsoft.ContainerService --query "registrationSta
 
 2. **Configure authentication** - Update `.env` with your Azure service principal credentials:
 ```bash
+# Option 1: Subscription-level Owner (wide privileges)
 az ad sp create-for-rbac --name "terraform" --role="Owner" --scopes="/subscriptions/<SUBSCRIPTION_ID>"
+
+# Option 2: Resource group-level Contributor (minimal privileges)
+az ad sp create-for-rbac --name "terraform" --role="Contributor" --scopes="/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP_NAME>"
 
 cp .env.example .env
 # Edit .env with your ARM_* values
