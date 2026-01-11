@@ -254,7 +254,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   tags = var.tags
 
-  depends_on = [
+  depends_on = var.enable_key_vault ? [
     azurerm_key_vault_access_policy.appgw_certs
-  ]
+  ] : []
 }
