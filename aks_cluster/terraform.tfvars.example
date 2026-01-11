@@ -22,9 +22,10 @@
 # appgw_sku = "Standard_v2"
 # appgw_capacity = 2
 
-# HTTPS/TLS Configuration
-# Enable Key Vault for certificate management (required for HTTPS)
-# enable_key_vault = true
+# Application Gateway and HTTPS/TLS Configuration
+# Enable Application Gateway with AGIC and Key Vault for certificate management
+# Set to false to disable Application Gateway and use a different ingress solution
+# enable_application_gateway = true
 
 # SSL certificate name in Key Vault (leave empty for HTTP-only mode)
 # After uploading your certificate to Key Vault, set this to the certificate name

@@ -72,7 +72,7 @@ resource "azurerm_subnet_network_security_group_association" "aks_nsg_associatio
 
 # Managed Identity for Application Gateway (for Key Vault access)
 resource "azurerm_user_assigned_identity" "appgw_identity" {
-  count = var.enable_key_vault ? 1 : 0
+  count = var.enable_application_gateway ? 1 : 0
 
   name                = "appgw-identity"
   resource_group_name = azurerm_resource_group.aks.name
@@ -83,7 +83,7 @@ resource "azurerm_user_assigned_identity" "appgw_identity" {
 
 # Key Vault for SSL certificates
 resource "azurerm_key_vault" "certs" {
-  count = var.enable_key_vault ? 1 : 0
+  count = var.enable_application_gateway ? 1 : 0
 
   name                       = "aks-certs-${random_string.suffix.result}"
   location                   = azurerm_resource_group.aks.location
@@ -104,7 +104,7 @@ resource "azurerm_key_vault" "certs" {
 
 # Grant Application Gateway managed identity access to Key Vault secrets
 resource "azurerm_key_vault_access_policy" "appgw_certs" {
-  count = var.enable_key_vault ? 1 : 0
+  count = var.enable_application_gateway ? 1 : 0
 
   key_vault_id = azurerm_key_vault.certs[0].id
   tenant_id    = data.azurerm_client_config.current.tenant_id
@@ -123,7 +123,7 @@ resource "azurerm_key_vault_access_policy" "appgw_certs" {
 
 # Grant current user/service principal access to manage certificates
 resource "azurerm_key_vault_access_policy" "current_user" {
-  count = var.enable_key_vault ? 1 : 0
+  count = var.enable_application_gateway ? 1 : 0
 
   key_vault_id = azurerm_key_vault.certs[0].id
   tenant_id    = data.azurerm_client_config.current.tenant_id
@@ -158,6 +158,8 @@ resource "azurerm_key_vault_access_policy" "current_user" {
 
 # Subnet for Application Gateway
 resource "azurerm_subnet" "appgw_subnet" {
+  count = var.enable_application_gateway ? 1 : 0
+
   name                 = "appgw-subnet"
   resource_group_name  = azurerm_resource_group.aks.name
   virtual_network_name = azurerm_virtual_network.aks_vnet.name
@@ -166,6 +168,8 @@ resource "azurerm_subnet" "appgw_subnet" {
 
 # Public IP for Application Gateway
 resource "azurerm_public_ip" "appgw_pip" {
+  count = var.enable_application_gateway ? 1 : 0
+
   name                = "appgw-pip"
   location            = azurerm_resource_group.aks.location
   resource_group_name = azurerm_resource_group.aks.name
@@ -178,7 +182,7 @@ resource "azurerm_public_ip" "appgw_pip" {
 # Local values for Application Gateway configuration
 locals {
   # Determine if HTTPS is enabled
-  appgw_https_enabled = var.enable_key_vault && var.appgw_ssl_certificate_name != ""
+  appgw_https_enabled = var.enable_application_gateway && var.appgw_ssl_certificate_name != ""
 
   # Determine if HTTP to HTTPS redirect is enabled
   appgw_redirect_enabled = local.appgw_https_enabled && var.appgw_enable_http_redirect
@@ -189,6 +193,8 @@ locals {
 
 # Application Gateway
 resource "azurerm_application_gateway" "appgw" {
+  count = var.enable_application_gateway ? 1 : 0
+
   name                = "aks-appgw"
   location            = azurerm_resource_group.aks.location
   resource_group_name = azurerm_resource_group.aks.name
@@ -199,12 +205,12 @@ resource "azurerm_application_gateway" "appgw" {
   }
 
   autoscale_configuration {
-    min_capacity = var.appgw_capacity
-    max_capacity = var.appgw_capacity
+    min_capacity = var.appgw_min_capacity
+    max_capacity = var.appgw_max_capacity
   }
   # Enable managed identity for Key Vault access (only when Key Vault is enabled)
   dynamic "identity" {
-    for_each = var.enable_key_vault ? [1] : []
+    for_each = var.enable_application_gateway ? [1] : []
     content {
       type         = "UserAssigned"
       identity_ids = [azurerm_user_assigned_identity.appgw_identity[0].id]
@@ -213,7 +219,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   gateway_ip_configuration {
     name      = "appgw-ip-config"
-    subnet_id = azurerm_subnet.appgw_subnet.id
+    subnet_id = azurerm_subnet.appgw_subnet[0].id
   }
 
   frontend_port {
@@ -228,12 +234,12 @@ resource "azurerm_application_gateway" "appgw" {
 
   frontend_ip_configuration {
     name                 = "appgw-frontend-ip"
-    public_ip_address_id = azurerm_public_ip.appgw_pip.id
+    public_ip_address_id = azurerm_public_ip.appgw_pip[0].id
   }
 
   frontend_ip_configuration {
     name                          = "appgw-frontend-private-ip"
-    subnet_id                     = azurerm_subnet.appgw_subnet.id
+    subnet_id                     = azurerm_subnet.appgw_subnet[0].id
     private_ip_address            = var.appgw_private_ip
     private_ip_address_allocation = "Static"
   }
@@ -256,12 +262,13 @@ resource "azurerm_application_gateway" "appgw" {
   }
 
   backend_http_settings {
-    name                  = "default-http-settings"
-    cookie_based_affinity = "Disabled"
-    port                  = 80
-    protocol              = "Http"
-    request_timeout       = 30
-    probe_name            = "default-health-probe"
+    name                                = "default-http-settings"
+    cookie_based_affinity               = "Disabled"
+    port                                = 80
+    protocol                            = "Http"
+    request_timeout                     = 30
+    probe_name                          = "default-health-probe"
+    pick_host_name_from_backend_address = true
   }
 
   # SSL certificate from Key Vault (only when certificate name is provided)
