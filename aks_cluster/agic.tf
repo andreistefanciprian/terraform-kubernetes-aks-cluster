@@ -209,7 +209,7 @@ resource "azurerm_application_gateway" "appgw" {
     for_each = local.appgw_https_enabled ? [1] : []
     content {
       name                = "appgw-ssl-cert"
-      key_vault_secret_id = "${azurerm_key_vault.certs[0].vault_uri}secrets/${var.appgw_ssl_certificate_name}"
+      key_vault_secret_id = var.certificate_version != "" ? "${azurerm_key_vault.certs[0].vault_uri}secrets/${var.appgw_ssl_certificate_name}/${var.certificate_version}" : "${azurerm_key_vault.certs[0].vault_uri}secrets/${var.appgw_ssl_certificate_name}"
     }
   }
 
