@@ -1,6 +1,8 @@
+# Certificate Setup and Demo Application
 
+## Create Certificate in Key Vault
 
-```
+```bash
 # Get your current user object ID
 USER_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
 
@@ -21,7 +23,7 @@ az keyvault certificate create \
 
 ```
 
-### Get Certificate Name for Ingress
+## Get Certificate Name for Ingress
 
 The certificate name used in the Kubernetes ingress annotation is the name configured on the Application Gateway (not the Key Vault name):
 
@@ -41,10 +43,20 @@ appgw.ingress.kubernetes.io/appgw-ssl-certificate: appgw-ssl-cert
 
 **Note**: The Terraform configuration names the certificate `appgw-ssl-cert` on the Application Gateway, even though it references `my-app-cert` from Key Vault.
 
+## Deploy Demo Application
+
+Deploy a sample echo application with HTTPS ingress:
+
+```bash
+kubectl apply -f demo-agic.yaml
 ```
 
+This creates:
+- A namespace `demo-agic`
+- An echo deployment and service
+- An ingress with HTTPS/TLS configuration pointing to `netl1.com`
 
-### Update DNS Records
+## Update DNS Records
 
 To point your domain to the Application Gateway:
 

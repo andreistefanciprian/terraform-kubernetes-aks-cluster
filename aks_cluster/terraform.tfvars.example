@@ -20,7 +20,6 @@
 
 # Application Gateway configuration
 # appgw_sku = "Standard_v2"
-# appgw_capacity = 2
 
 # Application Gateway and HTTPS/TLS Configuration
 # Enable Application Gateway with AGIC and Key Vault for certificate management
