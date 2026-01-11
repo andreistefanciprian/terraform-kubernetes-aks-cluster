@@ -252,20 +252,83 @@ resource "azurerm_application_gateway" "appgw" {
     probe_name            = "default-health-probe"
   }
 
+  # SSL certificate from Key Vault (only when certificate name is provided)
+  dynamic "ssl_certificate" {
+    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" ? [1] : []
+    content {
+      name                = "appgw-ssl-cert"
+      key_vault_secret_id = "${azurerm_key_vault.certs[0].vault_uri}secrets/${var.appgw_ssl_certificate_name}"
+    }
+  }
+
+  # HTTP listener on port 80
   http_listener {
-    name                           = "default-listener"
+    name                           = "http-listener"
     frontend_ip_configuration_name = "appgw-frontend-ip"
     frontend_port_name             = "http-port"
     protocol                       = "Http"
   }
 
-  request_routing_rule {
-    name                       = "default-routing-rule"
-    rule_type                  = "Basic"
-    http_listener_name         = "default-listener"
-    backend_address_pool_name  = "default-backend-pool"
-    backend_http_settings_name = "default-http-settings"
-    priority                   = 100
+  # HTTPS listener on port 443 (only when certificate is available)
+  dynamic "http_listener" {
+    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" ? [1] : []
+    content {
+      name                           = "https-listener"
+      frontend_ip_configuration_name = "appgw-frontend-ip"
+      frontend_port_name             = "https-port"
+      protocol                       = "Https"
+      ssl_certificate_name           = "appgw-ssl-cert"
+    }
+  }
+
+  # Redirect configuration for HTTP to HTTPS (only when HTTPS is enabled)
+  dynamic "redirect_configuration" {
+    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" && var.appgw_enable_http_redirect ? [1] : []
+    content {
+      name                 = "http-to-https-redirect"
+      redirect_type        = "Permanent"
+      target_listener_name = "https-listener"
+      include_path         = true
+      include_query_string = true
+    }
+  }
+
+  # HTTP to HTTPS redirect rule (only when HTTPS is enabled and redirect is enabled)
+  dynamic "request_routing_rule" {
+    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" && var.appgw_enable_http_redirect ? [1] : []
+    content {
+      name                        = "http-redirect-rule"
+      rule_type                   = "Basic"
+      http_listener_name          = "http-listener"
+      redirect_configuration_name = "http-to-https-redirect"
+      priority                    = 100
+    }
+  }
+
+  # HTTPS routing rule to backend (only when HTTPS is enabled)
+  dynamic "request_routing_rule" {
+    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" ? [1] : []
+    content {
+      name                       = "https-routing-rule"
+      rule_type                  = "Basic"
+      http_listener_name         = "https-listener"
+      backend_address_pool_name  = "default-backend-pool"
+      backend_http_settings_name = "default-http-settings"
+      priority                   = 200
+    }
+  }
+
+  # Fallback HTTP routing rule (when HTTPS is not configured or redirect is disabled)
+  dynamic "request_routing_rule" {
+    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" && var.appgw_enable_http_redirect ? [] : [1]
+    content {
+      name                       = "http-routing-rule"
+      rule_type                  = "Basic"
+      http_listener_name         = "http-listener"
+      backend_address_pool_name  = "default-backend-pool"
+      backend_http_settings_name = "default-http-settings"
+      priority                   = 300
+    }
   }
 
   tags = var.tags
