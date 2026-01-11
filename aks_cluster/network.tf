@@ -83,7 +83,7 @@ resource "azurerm_user_assigned_identity" "appgw_identity" {
 resource "azurerm_key_vault" "certs" {
   count = var.enable_key_vault ? 1 : 0
 
-  name                       = "aks-${var.resource_group_prefix}-${var.azure_region}-certs-${random_string.suffix.result}"
+  name                       = "aks-certs-${random_string.suffix.result}"
   location                   = azurerm_resource_group.aks.location
   resource_group_name        = azurerm_resource_group.aks.name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
