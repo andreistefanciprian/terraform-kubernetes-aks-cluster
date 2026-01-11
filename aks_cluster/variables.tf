@@ -88,6 +88,16 @@ variable "appgw_private_ip" {
   type        = string
   description = "Private IP address for Application Gateway frontend"
   default     = "10.10.2.10"
+
+  validation {
+    condition = can(
+      regex(
+        "^${join("\\.", slice(split(".", cidrhost(var.appgw_subnet_cidr, 0)), 0, 3))}\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4])$",
+        var.appgw_private_ip
+      )
+    )
+    error_message = "appgw_private_ip must be a valid IPv4 address within the appgw_subnet_cidr range and not the network or broadcast address."
+  }
 }
 
 variable "enable_key_vault" {
