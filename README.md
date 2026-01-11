@@ -64,68 +64,6 @@ kubectl cluster-info
 
 The AKS cluster includes an Application Gateway Ingress Controller (AGIC) with support for HTTPS/TLS termination.
 
-### HTTPS Configuration
-
-By default, the Application Gateway is configured with HTTP support. To enable HTTPS/TLS:
-
-1. **Generate or upload SSL certificate to Key Vault**:
-
-   **Option A: Generate a self-signed certificate (for testing)**
-   ```bash
-   # Get the Key Vault name (it will be aks-kv-<random-suffix>)
-   az keyvault list --resource-group <your-rg-name> --output table
-   
-   # Create a self-signed certificate in Key Vault
-   az keyvault certificate create \
-     --vault-name <key-vault-name> \
-     --name my-app-cert \
-     --policy "$(az keyvault certificate get-default-policy)"
-   
-   # Or create with custom subject
-   az keyvault certificate create \
-     --vault-name <key-vault-name> \
-     --name my-app-cert \
-     --policy '{
-       "issuerParameters": {"name": "Self"},
-       "keyProperties": {"exportable": true, "keyType": "RSA", "keySize": 2048, "reuseKey": false},
-       "x509CertificateProperties": {"subject": "CN=example.com"}
-     }'
-   ```
-
-   **Option B: Import an existing certificate (for production)**
-   ```bash
-   # Get the Key Vault name (it will be aks-kv-<random-suffix>)
-   az keyvault list --resource-group <your-rg-name> --output table
-   
-   # Import your certificate (PFX format with private key)
-   az keyvault certificate import \
-     --vault-name <key-vault-name> \
-     --name my-app-cert \
-     --file /path/to/certificate.pfx \
-     --password <pfx-password>
-   ```
-
-2. **Configure Terraform variables**:
-   Update your `aks_cluster/terraform.tfvars` or pass variables:
-   ```hcl
-   appgw_ssl_certificate_name = "my-app-cert"  # Name of certificate in Key Vault
-   appgw_enable_http_redirect = true            # Auto-redirect HTTP to HTTPS
-   ```
-
-3. **Apply the changes**:
-   ```bash
-   make deploy-auto-approve TF_TARGET=aks_cluster
-   ```
-
-### Security Features
-
-- **TLS Termination**: Application Gateway terminates TLS/SSL at the gateway
-- **HTTP to HTTPS Redirect**: Automatic permanent redirect from HTTP (port 80) to HTTPS (port 443)
-- **Key Vault Integration**: Certificates are securely stored in Azure Key Vault
-- **Managed Identity**: Application Gateway uses managed identity to access certificates
-
-**Note**: Without a certificate configured, the Application Gateway operates in HTTP-only mode on port 80. For production environments, always configure HTTPS with a valid SSL certificate.
-
 ## Cleanup
 ```bash
 # Destroy AKS cluster first
