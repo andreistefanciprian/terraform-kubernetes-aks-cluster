@@ -112,6 +112,18 @@ variable "key_vault_sku" {
   default     = "standard"
 }
 
+variable "appgw_ssl_certificate_name" {
+  type        = string
+  description = "Name of the SSL certificate in Key Vault (without version). Leave empty to use HTTP-only mode."
+  default     = ""
+}
+
+variable "appgw_enable_http_redirect" {
+  type        = bool
+  description = "Enable automatic HTTP to HTTPS redirect"
+  default     = true
+}
+
 variable "tags" {
   type        = map(string)
   description = "Common tags to apply to all resources"
