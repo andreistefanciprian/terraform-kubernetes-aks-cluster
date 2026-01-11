@@ -188,10 +188,13 @@ resource "azurerm_application_gateway" "appgw" {
     min_capacity = var.appgw_capacity
     max_capacity = var.appgw_capacity
   }
-  # Enable managed identity for Key Vault access
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.appgw_identity.id]
+  # Enable managed identity for Key Vault access (only when Key Vault is enabled)
+  dynamic "identity" {
+    for_each = var.enable_key_vault ? [1] : []
+    content {
+      type         = "UserAssigned"
+      identity_ids = [azurerm_user_assigned_identity.appgw_identity.id]
+    }
   }
 
   gateway_ip_configuration {
