@@ -28,6 +28,7 @@
 
 # SSL certificate name in Key Vault (leave empty for HTTP-only mode)
 # After uploading your certificate to Key Vault, set this to the certificate name
+# Note: Certificate must be in PFX format with private key included
 # appgw_ssl_certificate_name = "my-app-cert"
 
 # Enable automatic HTTP to HTTPS redirect (recommended for production)
