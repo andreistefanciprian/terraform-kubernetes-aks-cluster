@@ -93,10 +93,13 @@ resource "azurerm_key_vault" "certs" {
   soft_delete_retention_days = 7
   purge_protection_enabled   = false
 
-  # Network access - allow Azure services
+  # Network access - restrict to Application Gateway subnet and Azure services
+  # For production: change default_action to "Deny" and add ip_rules for management access
   network_acls {
-    default_action = "Allow"
-    bypass         = "AzureServices"
+    default_action             = "Allow" # Change to "Deny" for production
+    bypass                     = "AzureServices"
+    virtual_network_subnet_ids = [] # Add [azurerm_subnet.appgw_subnet[0].id] when default_action = "Deny"
+    ip_rules                   = [] # Add trusted IP ranges (e.g., ["1.2.3.4/32"]) when default_action = "Deny"
   }
 
   tags = var.tags
