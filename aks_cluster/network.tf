@@ -228,12 +228,26 @@ resource "azurerm_application_gateway" "appgw" {
     name = "default-backend-pool"
   }
 
+  probe {
+    name                                      = "default-health-probe"
+    protocol                                  = "Http"
+    path                                      = "/"
+    interval                                  = 30
+    timeout                                   = 15
+    unhealthy_threshold                       = 3
+    pick_host_name_from_backend_http_settings = true
+    match {
+      status_code = ["200-399"]
+    }
+  }
+
   backend_http_settings {
     name                  = "default-http-settings"
     cookie_based_affinity = "Disabled"
     port                  = 80
     protocol              = "Http"
     request_timeout       = 30
+    probe_name            = "default-health-probe"
   }
 
   http_listener {
