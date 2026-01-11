@@ -6,14 +6,17 @@
 # Get your current user object ID
 USER_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
 
+# Get the dynamically generated Key Vault name (Terraform creates aks-certs-<random>)
+AKS_KV_NAME=$(az keyvault list --query "[?starts_with(name, 'aks-certs-')].name | [0]" -o tsv)
+
 # Grant certificate permissions to your user
 az keyvault set-policy \
---name <aks-cert-name> \
+--name $AKS_KV_NAME \
 --object-id $USER_OBJECT_ID \
 --certificate-permissions create get list delete update import
 
 az keyvault certificate create \
---vault-name <aks-cert-name> \
+--vault-name $AKS_KV_NAME \
 --name my-app-cert \
 --policy '{
 "issuerParameters": {"name": "Self"},
