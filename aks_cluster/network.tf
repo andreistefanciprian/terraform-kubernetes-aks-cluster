@@ -175,6 +175,18 @@ resource "azurerm_public_ip" "appgw_pip" {
   tags = var.tags
 }
 
+# Local values for Application Gateway configuration
+locals {
+  # Determine if HTTPS is enabled
+  appgw_https_enabled = var.enable_key_vault && var.appgw_ssl_certificate_name != ""
+  
+  # Determine if HTTP to HTTPS redirect is enabled
+  appgw_redirect_enabled = local.appgw_https_enabled && var.appgw_enable_http_redirect
+  
+  # Determine if HTTP routing should be enabled (when HTTPS is not configured or redirect is disabled)
+  appgw_http_routing_enabled = !local.appgw_redirect_enabled
+}
+
 # Application Gateway
 resource "azurerm_application_gateway" "appgw" {
   name                = "aks-appgw"
@@ -254,7 +266,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   # SSL certificate from Key Vault (only when certificate name is provided)
   dynamic "ssl_certificate" {
-    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" ? [1] : []
+    for_each = local.appgw_https_enabled ? [1] : []
     content {
       name                = "appgw-ssl-cert"
       key_vault_secret_id = "${azurerm_key_vault.certs[0].vault_uri}secrets/${var.appgw_ssl_certificate_name}"
@@ -271,7 +283,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   # HTTPS listener on port 443 (only when certificate is available)
   dynamic "http_listener" {
-    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" ? [1] : []
+    for_each = local.appgw_https_enabled ? [1] : []
     content {
       name                           = "https-listener"
       frontend_ip_configuration_name = "appgw-frontend-ip"
@@ -283,7 +295,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Redirect configuration for HTTP to HTTPS (only when HTTPS is enabled)
   dynamic "redirect_configuration" {
-    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" && var.appgw_enable_http_redirect ? [1] : []
+    for_each = local.appgw_redirect_enabled ? [1] : []
     content {
       name                 = "http-to-https-redirect"
       redirect_type        = "Permanent"
@@ -295,7 +307,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   # HTTP to HTTPS redirect rule (only when HTTPS is enabled and redirect is enabled)
   dynamic "request_routing_rule" {
-    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" && var.appgw_enable_http_redirect ? [1] : []
+    for_each = local.appgw_redirect_enabled ? [1] : []
     content {
       name                        = "http-redirect-rule"
       rule_type                   = "Basic"
@@ -307,7 +319,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   # HTTPS routing rule to backend (only when HTTPS is enabled)
   dynamic "request_routing_rule" {
-    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" ? [1] : []
+    for_each = local.appgw_https_enabled ? [1] : []
     content {
       name                       = "https-routing-rule"
       rule_type                  = "Basic"
@@ -320,7 +332,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Fallback HTTP routing rule (when HTTPS is not configured or redirect is disabled)
   dynamic "request_routing_rule" {
-    for_each = var.enable_key_vault && var.appgw_ssl_certificate_name != "" && var.appgw_enable_http_redirect ? [] : [1]
+    for_each = local.appgw_http_routing_enabled ? [1] : []
     content {
       name                       = "http-routing-rule"
       rule_type                  = "Basic"
