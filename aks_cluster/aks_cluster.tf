@@ -116,15 +116,17 @@ resource "azurerm_kubernetes_cluster" "aks" {
   http_application_routing_enabled = false
 
   # Application Gateway Ingress Controller add-on
-  ingress_application_gateway {
-    gateway_id = azurerm_application_gateway.appgw.id
+  dynamic "ingress_application_gateway" {
+    for_each = var.enable_application_gateway ? [1] : []
+    content {
+      gateway_id = azurerm_application_gateway.appgw[0].id
+    }
   }
 
   tags = var.tags
 
   depends_on = [
     azurerm_subnet_route_table_association.aks_route_association,
-    azurerm_subnet_network_security_group_association.aks_nsg_association,
-    azurerm_application_gateway.appgw
+    azurerm_subnet_network_security_group_association.aks_nsg_association
   ]
 }

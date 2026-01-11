@@ -78,9 +78,15 @@ variable "appgw_sku" {
   default     = "Standard_v2"
 }
 
-variable "appgw_capacity" {
+variable "appgw_min_capacity" {
   type        = number
-  description = "Capacity (instance count) for Application Gateway"
+  description = "Minimum capacity (instance count) for Application Gateway autoscaling"
+  default     = 1
+}
+
+variable "appgw_max_capacity" {
+  type        = number
+  description = "Maximum capacity (instance count) for Application Gateway autoscaling"
   default     = 2
 }
 
@@ -100,9 +106,9 @@ variable "appgw_private_ip" {
   }
 }
 
-variable "enable_key_vault" {
+variable "enable_application_gateway" {
   type        = bool
-  description = "Enable Key Vault for certificate management"
+  description = "Enable Application Gateway with AGIC and Key Vault for certificate management"
   default     = true
 }
 
