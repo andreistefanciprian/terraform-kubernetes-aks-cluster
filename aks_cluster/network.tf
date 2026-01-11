@@ -180,11 +180,14 @@ resource "azurerm_application_gateway" "appgw" {
   resource_group_name = azurerm_resource_group.aks.name
 
   sku {
-    name     = var.appgw_sku
-    tier     = var.appgw_sku
-    capacity = var.appgw_capacity
+    name = var.appgw_sku
+    tier = var.appgw_sku
   }
 
+  autoscale_configuration {
+    min_capacity = var.appgw_capacity
+    max_capacity = var.appgw_capacity
+  }
   # Enable managed identity for Key Vault access
   identity {
     type         = "UserAssigned"
