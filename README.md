@@ -66,12 +66,6 @@ The AKS cluster can be deployed with Application Gateway Ingress Controller (AGI
 
 **Enable/Disable**: Set `enable_application_gateway = true` (or `false`) in `aks_cluster/terraform.tfvars`
 
-**Setup HTTPS**:
-1. Create a certificate in Key Vault (see [`k8s/gen_cert.md`](k8s/gen_cert.md))
-2. Deploy demo app: `kubectl apply -f k8s/demo-agic.yaml`
-
-**Update DNS**: Point your domain to the Application Gateway IP (see [`k8s/gen_cert.md`](k8s/gen_cert.md) for Route53 example)
-
 ## Cleanup
 ```bash
 # Destroy AKS cluster first
