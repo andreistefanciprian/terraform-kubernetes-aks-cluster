@@ -72,6 +72,8 @@ resource "azurerm_subnet_network_security_group_association" "aks_nsg_associatio
 
 # Managed Identity for Application Gateway (for Key Vault access)
 resource "azurerm_user_assigned_identity" "appgw_identity" {
+  count = var.enable_key_vault ? 1 : 0
+
   name                = "appgw-identity"
   resource_group_name = azurerm_resource_group.aks.name
   location            = azurerm_resource_group.aks.location
@@ -106,7 +108,7 @@ resource "azurerm_key_vault_access_policy" "appgw_certs" {
 
   key_vault_id = azurerm_key_vault.certs[0].id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = azurerm_user_assigned_identity.appgw_identity.principal_id
+  object_id    = azurerm_user_assigned_identity.appgw_identity[0].principal_id
 
   secret_permissions = [
     "Get",
@@ -193,7 +195,7 @@ resource "azurerm_application_gateway" "appgw" {
     for_each = var.enable_key_vault ? [1] : []
     content {
       type         = "UserAssigned"
-      identity_ids = [azurerm_user_assigned_identity.appgw_identity.id]
+      identity_ids = [azurerm_user_assigned_identity.appgw_identity[0].id]
     }
   }
 

@@ -39,7 +39,9 @@ resource "azurerm_role_assignment" "agic_appgw_subnet" {
 # App Gateway has a user-assigned identity (used for Key Vault access). When AGIC updates the
 # Application Gateway, ARM validates that the caller can assign that identity.
 resource "azurerm_role_assignment" "agic_appgw_identity_operator" {
-  scope                = azurerm_user_assigned_identity.appgw_identity.id
+  count = var.enable_key_vault ? 1 : 0
+
+  scope                = azurerm_user_assigned_identity.appgw_identity[0].id
   role_definition_name = "Managed Identity Operator"
   principal_id         = azurerm_kubernetes_cluster.aks.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
 
