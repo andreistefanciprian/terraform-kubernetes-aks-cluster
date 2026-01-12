@@ -37,7 +37,6 @@ override.tf.json
 terraform.rc
 
 *.json
-*.yaml
 !docker-compose.yaml
 */.terraform
 */.terraform.lock.hcl
